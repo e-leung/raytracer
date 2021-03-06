@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>ray tracer</title>
+
+  <!-- latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <!-- latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+  <!-- load MathJax for typesetting equations in LaTeX -->
+  <script>
+  MathJax = {
+    tex: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
+  };
+  </script>
+  <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <!-- load gl-matrix: all functions and modules will be available in the mat2, mat3, mat4, vec2, vec3, vec4 namespaces -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
+
+  <!-- include any other scripts you write or mesh .js files here -->
+  <script src='raytracer.js'></script>
+</head>
+
+<body onload="run();">
+
+  <!-- wrapper -->
+  <div class="d-flex" id="wrapper">
+
+    <!-- page content -->
+    <div id="page-content-wrapper">
+
+      <!-- navigation bar -->
+      <nav class="navbar" style="background-color: #e3f2fd;">
+          <a class="navbar-brand" href="https://philipclaude.gitlab.io/cs461w21/index.html">
+          Middlebury College CSCI 461 - Computer Graphics</a>
+      </nav> <!-- navigation bar -->
+
+      <div class="container-fluid">
+        <h4>Ray Tracer Project</h4>
+        name: <i>Eric Leung</i>
+
+        <br><br>
+        <center>
+          <div>
+          <input type="checkbox" id="alias" name="alias" onclick="alias()">
+          <label for="alias">Enable anti-aliasing</label>
+          </div>
+          <canvas width=600 height=400 id='canvas-raytracer'></canvas>
+          <br>
+          <select id='select-background' onchange='setBackground();'>
+            <option value='daylight'>daylight</option>
+            <option value='white'>white</option>
+          </select>
+          <select id='select-checkpoint' onchange='runCheckpoint();'>
+            <option value='1'>checkpoint1</option>
+            <option value='2'>checkpoint2</option>
+            <option value='3'>checkpoint3</option>
+            <option value='4'>checkpoint4</option>
+            <option value='5'>checkpoint5</option>
+          </select>
+          <br>
+        </center>
+        <hr>
+
+        <h4>Description</h4>
+        <i>
+          Describe your ray tracer here.
+          This will include a discussion of any research you did to implement the features you chose. 
+          For example, how did you intersect rays with triangles?
+          How did you compute the background color from an image?
+          How did you texture your objects?
+          How did you calculate the intersection point for more complicated shapes?
+        </i>
+        <h5>My raytracer renders a scene by fixing a camera at a set location and a "look-at" or, center point. The color of each pixel is determined using a <code>color</code> function first determines what object the ray created from the camera of the raytracer hits in the scene with the <code>intersect</code> function. The <code>intersect</code> function uses the quadratic formula to find the closest object intersected. The <code>shade</code> function uses this information to utilize the Blinn-Phong model in order to calculate the correct color for the pixel based on the lights and objects around it in the scene. A <code>scatter</code> function then determines if new rays should be created at each intersection point, and the new direction they head towards. Reflected rays then bounce off other objects in the scene but refracted rays are sent through the object and the <code>scatter</code> function determines where on the object it leaves.</h5>
+        <h5>My <code>anti-aliasing</code> feature was implemented by adding an alias parameter to the <code>raytracer.draw</code> function. If alias is true, I take 20 subpixel samples and average the result. </h5>
+
+        <hr>
+        <h4>Results</h4>
+        <i>
+          Describe the scenes you set up and include sample images your ray tracer generates for these scenes.
+          You must include images that demonstrate the ability of your ray tracer to render images similar to the "checkpoint" images.
+          You should also include any images your ray tracer produces for the features you added.
+        </i>
+        <br>
+        <h5>This is a red sphere centered at <code>(0,0,0)</code> and camera positioned at <code>(0,0,20)</code>.</h5>
+        <img src="https://i.imgur.com/Ue4VvWA.png"
+          width="300" height="200">
+          <br>
+        <h5>This is a red ball at <code>(1,1,0)</code>, a green ball at <code>(-1,0.5,2)</code> and a gray ball at <code>(0,-1000,0)</code> with a camera positioned at <code>(0,2,20)</code>. I am now using a loop to find the closest intersection point  by keeping the lowest t value after solving the quadratic. I then color the object this intersection point belongs to</h5>
+        <img src="https://i.imgur.com/UqTMhOo.png"
+          width="300" height="200">
+          <br>
+        <h5>Now there are four spheres, two reflective and two diffuse, that are shaded using the Blinn-Phong model. I determine the area of the shade by sending a ray from the intersection point towards the light position. If this ray hits something, that means it is in the shadow of an object and I do not shade it using the Blinn-Phong model. </h5>
+        <img src="https://i.imgur.com/ygWlavW.png"
+          width="300" height="200">
+          <br>
+        <h5>Now the red and grey spheres are reflective. My <code>scatter</code> function determines where rays are scattered after they hit a reflective material. These rays contribute to the color of the object they hit after reflecting.</h5>
+        <img src="https://i.imgur.com/E0Xufmh.png"
+          width="300" height="200">
+          <br>
+        <h5>A glass sphere is added with refractive index 1.5. When a ray hits the refractive sphere, the <code>scatter</code> function determines where on the object it exits. </h5>
+        <img src="https://i.imgur.com/XIuhamL.png"
+          width="300" height="200">
+          <br>
+        <h5>This is the same scene as above but with anti-aliasing enabled. In order to make the scene look smoother, I take average 20 subpixel samples. </h5>
+        <img src="https://i.imgur.com/PCeEPh1.png"
+          width="300" height="200">
+        <hr>
+      </div> <!-- container-fluid -->
+    </div> <!-- page-content-wrapper -->
+  </div> <!-- wrapper -->
+</body>
+
+<script>
+
+  let raytracer = undefined;
+  let checkpoint = 1;
+  let aliasV = false;
+
+  function run() {
+    if (checkpoint == 1) checkpoint1();
+    else if (checkpoint === 2) checkpoint2();
+    else if (checkpoint === 3) checkpoint3();
+    else if (checkpoint === 4) checkpoint4();
+    else if (checkpoint === 5) checkpoint5();
+    else alert('unknown checkpoint');
+  }
+
+  function setBackground() {
+    let select = document.getElementById('select-background');
+    raytracer.sky = select.value;
+    raytracer.draw();
+  }
+
+  function runCheckpoint() {
+    let select = document.getElementById('select-checkpoint');
+    checkpoint = parseInt(select.value);
+    run();
+  }
+
+  function alias() {
+    if (aliasV == false) {
+      aliasV = true;
+    }else {
+      aliasV = false;
+    }
+    let select = document.getElementById('select-checkpoint');
+    checkpoint = parseInt(select.value);
+ 
+    run();
+  }
+
+  function checkpoint1() {
+
+    // setup the ray tracer with the daylight background
+    raytracer = new RayTracer('canvas-raytracer');
+
+    // a red ball
+    let params = {
+      'center': vec3.fromValues(0,0,0) ,
+      'radius': 1.0 ,
+      'material': undefined ,
+      'color': vec3.fromValues(1,0,0)
+    };
+    let sphere = new Sphere(params);
+    raytracer.objects.push(sphere);
+
+    // render the scene
+    raytracer.draw(vec3.fromValues(0, 0, 20),
+    vec3.fromValues(0, 0, 0),
+    vec3.fromValues(0, 1, 0),
+    Math.PI/6,
+    1.5,
+    aliasV );
+  }
+
+  function checkpoint2() {
+
+    // setup the ray tracer with the daylight background
+    raytracer = new RayTracer('canvas-raytracer');
+
+    // a red ball at (1,1,0)
+    let params1 = {
+      'center': vec3.fromValues(1,1.0,0.0) ,
+      'radius': 1.0 ,
+      'material': undefined ,
+      'color': vec3.fromValues(1,0,0)
+    };
+    let sphere1 = new Sphere(params1);
+    raytracer.objects.push(sphere1);
+
+    // the ground (a really big sphere)
+    let params2 = {
+      'center': vec3.fromValues(0,-1000,0) ,
+      'radius': 1000.0 ,
+      'material': undefined ,
+      'color': vec3.fromValues(0.5,0.5,0.5)
+    };
+    let sphere2 = new Sphere(params2);
+    raytracer.objects.push(sphere2);
+
+    // a green ball at (-1,0.5,2)
+    let params3 = {
+      'center': vec3.fromValues(-1,0.5,2) ,
+      'radius': 0.5 ,
+      'material': undefined ,
+      'color': vec3.fromValues(0,1,0)
+    };
+    let sphere3 = new Sphere(params3);
+    raytracer.objects.push(sphere3);
+
+    // render the scene
+    raytracer.draw(vec3.fromValues(0, 2, 20),
+    vec3.fromValues(0, 0, 0),
+    vec3.fromValues(0, 1, 0),
+    Math.PI/6,
+    1.5,
+    aliasV );
+  }
+
+  function checkpoint3() {
+
+    // setup the ray tracer with the daylight background
+    raytracer = new RayTracer('canvas-raytracer');
+
+    // a red ball shaded with the phong model (phong exponent = 32)
+    let params1 = {
+      'center': vec3.fromValues(1.0,1.0,-2) ,
+      'radius': 1.0 ,
+      'material': new Material({'type':'diffuse','color':[0.4,0,0],'shine':32}) ,
+      'name': 'red-ball'
+    };
+    let sphere1 = new Sphere(params1);
+    raytracer.objects.push(sphere1);
+
+    // a gray-colored ground, represented as a giant sphere
+    let params2 = {
+      'center': vec3.fromValues(0,-1000,0) ,
+      'radius': 1000.0 ,
+      'material': new Material({'type':'diffuse','color':[.9,0.9,0.9]}) ,
+      'name': 'ground'
+    };
+    let sphere2 = new Sphere(params2);
+    raytracer.objects.push(sphere2);
+
+    // a mint-colored ball shaded with the phong model (phong exponent = 32)
+    let params3 = {
+      'center': vec3.fromValues(-1,0.5,2) ,
+      'radius': 0.5 ,
+      'material': new Material({'type':'diffuse','color':[0.07,0.98,0.53],'shine':32}) ,
+      'name': 'mint-ball'
+    };
+    let sphere3 = new Sphere(params3);
+    raytracer.objects.push(sphere3);
+
+    // a salmon-colored diffuse ball (no phong model)
+    let params4 = {
+      'center': vec3.fromValues(0,0.5,-5) ,
+      'radius': 0.5 ,
+      'material': new Material({'type':'diffuse','color':[0.98,0.5,0.44]}) ,
+      'name': 'salmon-ball'
+    };
+    let sphere4 = new Sphere(params4);
+    raytracer.objects.push(sphere4);
+
+    // add a white light
+    raytracer.lights.push( new Light({'location': vec3.fromValues(-10,5,0) } ) );
+
+    // render the scene
+    raytracer.draw(vec3.fromValues(0, 2, 10),
+    vec3.fromValues(0, 0, 0),
+    vec3.fromValues(0, 1, 0),
+    Math.PI/6,
+    1.5,
+    aliasV );
+  }
+
+  function checkpoint4() {
+
+    // setup the ray tracer with the daylight background
+    raytracer = new RayTracer('canvas-raytracer');
+
+    // a metallic sphere with a red base color
+    let params1 = {
+      'center': vec3.fromValues(3.0,1.0,-4) ,
+      'radius': 1.0 ,
+      'material': new Material({'type':'reflective','color':[0.4,0,0],'shine':32}) ,
+      'name': 'red-ball'
+    };
+    let sphere1 = new Sphere(params1);
+    raytracer.objects.push(sphere1);
+
+    // a metallic ground with a gray base color
+    let params2 = {
+      'center': vec3.fromValues(0,-1000,0) ,
+      'radius': 1000.0 ,
+      'material': new Material({'type':'reflective','color':[.9,0.9,0.9]}) ,
+      'name': 'ground'
+    };
+    let sphere2 = new Sphere(params2);
+    raytracer.objects.push(sphere2);
+
+    // a minty diffuse sphere
+    let params3 = {
+      'center': vec3.fromValues(-1,0.5,2) ,
+      'radius': 0.5 ,
+      'material': new Material({'type':'diffuse','color':[0.07,0.98,0.53]}) ,
+      'name': 'mint-ball'
+    };
+    let sphere3 = new Sphere(params3);
+    raytracer.objects.push(sphere3);
+
+    // a salmon-colored diffuse sphere
+    let params4 = {
+      'center': vec3.fromValues(0,0.5,-5) ,
+      'radius': 0.5 ,
+      'material': new Material({'type':'diffuse','color':[0.98,0.5,0.44]}) ,
+      'name': 'salmon-ball'
+    };
+    let sphere4 = new Sphere(params4);
+    raytracer.objects.push(sphere4);
+
+    // add a white light
+    raytracer.lights.push( new Light({'location': vec3.fromValues(-10,5,0) } ) );
+
+    // render the scene
+    raytracer.draw(vec3.fromValues(0, 2, 10),
+    vec3.fromValues(0, 0, 0),
+    vec3.fromValues(0, 1, 0),
+    Math.PI/6,
+    1.5,
+    aliasV );
+  }
+  function checkpoint5() {
+
+    // setup the ray tracer with the daylight background
+    raytracer = new RayTracer('canvas-raytracer');
+
+    // a metallic sphere with a red base color
+    let params1 = {
+      'center': vec3.fromValues(3.0,1.0,-4) ,
+      'radius': 1.0 ,
+      'material': new Material({'type':'reflective','color':[0.4,0,0],'shine':32}) ,
+      'name': 'red-ball'
+    };
+    let sphere1 = new Sphere(params1);
+    raytracer.objects.push(sphere1);
+
+    // a metallic ground with a gray base color
+    let params2 = {
+      'center': vec3.fromValues(0,-1000,0) ,
+      'radius': 1000.0 ,
+      'material': new Material({'type':'reflective','color':[.9,0.9,0.9]}) ,
+      'name': 'ground'
+    };
+    let sphere2 = new Sphere(params2);
+    raytracer.objects.push(sphere2);
+
+    // a minty diffuse sphere
+    let params3 = {
+      'center': vec3.fromValues(-2,0.5,1) ,
+      'radius': 0.5 ,
+      'material': new Material({'type':'reflective','color':[0.07,0.98,0.53]}) ,
+      'name': 'mint-ball'
+    };
+    let sphere3 = new Sphere(params3);
+    raytracer.objects.push(sphere3);
+
+    // a salmon-colored diffuse sphere
+    let params4 = {
+      'center': vec3.fromValues(0,0.5,-5) ,
+      'radius': 0.5 ,
+      'material': new Material({'type':'diffuse','color':[0.98,0.5,0.44]}) ,
+      'name': 'salmon-ball'
+    };
+    let sphere4 = new Sphere(params4);
+    raytracer.objects.push(sphere4);
+
+    // transparent ball
+    let params5 = {
+      'center': vec3.fromValues(1,0.6,3) ,
+      'radius': 0.6 ,
+      'material': new Material({'type':'refractive','color':[1,1,1]}) ,
+      'name': 'glass-ball'
+    };
+    let sphere5 = new Sphere(params5);
+    raytracer.objects.push(sphere5);
+
+    // add a white light
+    raytracer.lights.push( new Light({'location': vec3.fromValues(-10,5,0) } ) );
+
+    // render the scene
+    raytracer.draw(vec3.fromValues(0, 2, 10),
+    vec3.fromValues(0, 0, 0),
+    vec3.fromValues(0, 1, 0),
+    Math.PI/6,
+    1.5,
+    aliasV );
+  }
+</script>
+
+</html>
